@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 
 
@@ -137,8 +138,19 @@ router.post('/login', (req, res) => {
                                 message : "password incorrect"
                             })
                         }else{
+                            // 토큰 발행
+                            const payload = {id: user._id, name: user.name, email: user.email, avatar: user.avatar};
+
+                            //sign token
+                            const token = jwt.sign(
+                                payload, 
+                                process.env.SECRET_KEY,
+                                {expiresIn: 36000}
+                            );
+
                             res.json({
-                                message : "login successful"
+                                message : "login successful",
+                                tokenInfo : 'bearer '+ token
                             })
                         }
                     })
