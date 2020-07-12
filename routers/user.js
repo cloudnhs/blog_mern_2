@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const userModel = require('../models/user');
 
 
 // @route GET user/test
@@ -16,6 +17,31 @@ router.get('/test', (req, res) => {
 // @access Public
 router.post('/register', (req, res) => {
     
+    const newUser = new userModel({
+        name : req.body.name,
+        email : req.body.email,
+        password : req.body.password
+    });
+
+    newUser
+        .save()
+        .then(user => {
+            res.json({
+                message : "saved user data",
+                userInfo : user
+            })
+        })
+        .catch(err => {
+            res.json({
+                message : err.message
+            });
+        });
+
+
+
+
+
+
 });
 
 
