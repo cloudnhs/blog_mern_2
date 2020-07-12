@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const gravatar = require('gravatar');
 const userModel = require('../models/user');
 
 
@@ -36,41 +34,58 @@ router.post('/register', (req, res) => {
                             message : 'name exists'
                         })
                     }
-                    const avatar = gravatar.url(req.body.email, {
-                        s: '200',
-                        r: 'pg',
-                        d: 'mm'
+
+                    const newUser = new userModel({
+                        name : req.body.name,
+                        email : req.body.email,
+                        password : req.body.password
                     });
-        
-                    bcrypt.genSalt(10, (err, salt) =>{
-                        if(err) return err;
-                        console.log(salt);
-                        bcrypt.hash(req.body.password, salt, (err, hash) => {
-                            if(err) return err;
-                            const newUser = new userModel({
-                                name : req.body.name,
-                                email : req.body.email,
-                                password : hash,
-                                avatar : avatar
+
+                    newUser
+                        .save()
+                        .then(user => {
+                            res.json({
+                                message : "Successful newuser",
+                                userInfo : user
                             });
+                        })
+                        .catch(err => console.log(err));
+
+                    // const avatar = gravatar.url(req.body.email, {
+                    //     s: '200',
+                    //     r: 'pg',
+                    //     d: 'mm'
+                    // });
+        
+                    // bcrypt.genSalt(10, (err, salt) =>{
+                    //     if(err) return err;
+                    //     console.log(salt);
+                    //     bcrypt.hash(req.body.password, salt, (err, hash) => {
+                    //         if(err) return err;
+                    //         const newUser = new userModel({
+                    //             name : req.body.name,
+                    //             email : req.body.email,
+                    //             password : hash,
+                    //             avatar : avatar
+                    //         });
                         
-                            newUser
-                                .save()
-                                .then(user => {
-                                    res.json({
-                                        message : "saved user data",
-                                        userInfo : user
-                                    })
-                                })
-                                .catch(err => {
-                                    res.json({
-                                        message : err.message
-                                    });
-                                });
+                    //         newUser
+                    //             .save()
+                    //             .then(user => {
+                    //                 res.json({
+                    //                     message : "saved user data",
+                    //                     userInfo : user
+                    //                 })
+                    //             })
+                    //             .catch(err => {
+                    //                 res.json({
+                    //                     message : err.message
+                    //                 });
+                    //             });
                         
                 
-                        })
-                    })
+                    //     })
+                    // })
                 })
                 .catch(err => {
                     res.json({
