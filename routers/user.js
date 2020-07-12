@@ -4,6 +4,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 
+function tokenGenerator(payload) {
+    return jwt.sign(
+        payload,
+        process.env.SECRET_KEY,
+        {expiresIn : 36000}
+    );
+}
 
 // @route GET user/test
 // @desc Test user route
@@ -118,47 +125,69 @@ router.post('/register', (req, res) => {
 // @desc login user, return jwt
 // @access Public
 router.post('/login', (req, res) => {
-
+    const {email,password} = req.body;
     // email matching -> password matching -> return jwt
     // const newUser = new userModel
     userModel
-        .findOne({email : req.body.email})
+        .findOne({email})
         .then(user => {
             if(!user){
                 return res.json({
                     message : "user not found"
                 });
             }else {
-                bcrypt
-                    .compare(req.body.password, user.password)
-                    .then(isMatch => {
-                        console.log(isMatch)   
-                        if(isMatch === false){
-                            return res.json({
-                                message : "password incorrect"
-                            })
-                        }else{
-                            // 토큰 발행
-                            const payload = {id: user._id, name: user.name, email: user.email, avatar: user.avatar};
+                user.comparePassword(password, (err, result) => {
+                    console.log("comparePassword : " + result);
+                    if(err || result === false) {
+                        return res.json({
+                            message : "password incorrect"
+                        })
+                    };
+                    // 토큰 발행
+                    const payload = {id: user._id, name: user.name, email: user.email, avatar: user.avatar};
 
-                            //sign token
-                            const token = jwt.sign(
-                                payload, 
-                                process.env.SECRET_KEY,
-                                {expiresIn: 36000}
-                            );
+                    //sign token
+                    // const token = jwt.sign(
+                    //     payload, 
+                    //     process.env.SECRET_KEY,
+                    //     {expiresIn: 36000}
+                    // );
 
-                            res.json({
-                                message : "login successful",
-                                tokenInfo : 'bearer '+ token
-                            })
-                        }
+                    res.json({
+                        message : "login successful",
+                        tokenInfo : 'bearer '+ tokenGenerator(payload)
                     })
-                    .catch(err => {
-                        res.json({
-                            error : err.message
-                        });
-                    });
+                })
+                // bcrypt
+                //     .compare(password, user.password)
+                //     .then(isMatch => {
+                //         console.log(isMatch)   
+                //         if(isMatch === false){
+                //             return res.json({
+                //                 message : "password incorrect"
+                //             })
+                //         }else{
+                //             // 토큰 발행
+                //             const payload = {id: user._id, name: user.name, email: user.email, avatar: user.avatar};
+
+                //             //sign token
+                //             const token = jwt.sign(
+                //                 payload, 
+                //                 process.env.SECRET_KEY,
+                //                 {expiresIn: 36000}
+                //             );
+
+                //             res.json({
+                //                 message : "login successful",
+                //                 tokenInfo : 'bearer '+ token
+                //             })
+                //         }
+                //     })
+                //     .catch(err => {
+                //         res.json({
+                //             error : err.message
+                //         });
+                //     });
             }
             
         })
