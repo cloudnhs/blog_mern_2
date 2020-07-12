@@ -17,9 +17,11 @@ router.get('/test', (req, res) => {
 // @access Public
 router.post('/register', (req, res) => {
 
+    const {name, email, password} = req.body;
+
     // email matching -> password 암호화 -> database 저장
     userModel
-        .findOne({email: req.body.email})
+        .findOne({email})
         .then(user => {
             if(user){
                 return res.json({
@@ -27,7 +29,7 @@ router.post('/register', (req, res) => {
                 })
             }
             userModel
-                .findOne({name: req.body.name})
+                .findOne({name})
                 .then(user => {
                     if(user){
                         return res.json({
@@ -36,9 +38,9 @@ router.post('/register', (req, res) => {
                     }
 
                     const newUser = new userModel({
-                        name : req.body.name,
-                        email : req.body.email,
-                        password : req.body.password
+                        name,
+                        email,
+                        password
                     });
 
                     newUser
