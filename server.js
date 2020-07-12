@@ -3,8 +3,12 @@ const app = express();
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const dotEnv = require('dotenv');
+const router = require("./routers/user");
 
 dotEnv.config();
+
+
+const userRouter = require('./routers/user');
 
 // database setting
 
@@ -18,7 +22,9 @@ app.use(bodyParser.json());
 app.use(morgan('dev'));
 
 
+app.use('/user', userRouter)
+
 
 const PORT = process.env.PORT || 7070;
 
-app.listen(PORT, console.log("server started"));
+app.listen(PORT, console.log(`server started at ${PORT}`));
