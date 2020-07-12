@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const userModel = require('../models/user');
 
 
@@ -108,11 +109,6 @@ router.post('/register', (req, res) => {
 
 
 
-
-
-
-
-
 });
 
 
@@ -121,6 +117,44 @@ router.post('/register', (req, res) => {
 // @desc login user, return jwt
 // @access Public
 router.post('/login', (req, res) => {
+
+    // email matching -> password matching -> return jwt
+    // const newUser = new userModel
+    userModel
+        .findOne({email : req.body.email})
+        .then(user => {
+            if(!user){
+                return res.json({
+                    message : "user not found"
+                });
+            }else {
+                bcrypt
+                    .compare(req.body.password, user.password)
+                    .then(isMatch => {
+                        console.log(isMatch)   
+                        if(isMatch === false){
+                            return res.json({
+                                message : "password incorrect"
+                            })
+                        }else{
+                            res.json({
+                                message : "login successful"
+                            })
+                        }
+                    })
+                    .catch(err => {
+                        res.json({
+                            error : err.message
+                        });
+                    });
+            }
+            
+        })
+        .catch(err =>{
+            res.json({
+                message : err.message
+            });
+        })
 
 });
 
