@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 
+const checkAuth = require('../api/middleware/check-auth');
+
 function tokenGenerator(payload) {
     return jwt.sign(
         payload,
@@ -31,12 +33,13 @@ router.post('/register', (req, res) => {
     // email matching -> password 암호화 -> database 저장
     userModel
         .findOne({email})
+        
         .then(user => {
-            if(user){
-                return res.json({
-                    message : 'email exists'
-                })
-            }
+             if(user){
+                 return res.json({
+                     message : 'email exists'
+                 })
+             }
             userModel
                 .findOne({name})
                 .then(user => {
@@ -202,7 +205,10 @@ router.post('/login', (req, res) => {
 // @route GET user/current
 // @desc current user
 // @access Private
-router.get('/current', (req, res) => {
+router.get('/current', checkAuth, (req, res) => {
+    return res.json({
+        message : "jwt confirmed"
+    })
 
 });
 
