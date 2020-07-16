@@ -9,6 +9,7 @@ dotEnv.config();
 
 
 const userRouter = require('./routers/user');
+const productRouter = require('./routers/product');
 
 // database setting
 
@@ -22,7 +23,8 @@ app.use(bodyParser.json());
 app.use(morgan('dev'));
 
 
-app.use('/user', userRouter)
+app.use('/user', userRouter);
+app.use('/product', productRouter);
 
 
 const PORT = process.env.PORT || 7070;
