@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
-
-const checkAuth = require('../api/middleware/check-auth');
+const passport = require('passport');
+const checkAuth = passport.authenticate('jwt', {session : false});
 
 function tokenGenerator(payload) {
     return jwt.sign(
@@ -13,15 +12,6 @@ function tokenGenerator(payload) {
         {expiresIn : 36000}
     );
 }
-
-// @route GET user/test
-// @desc Test user route
-// @access Public
-
-
-router.get('/test', (req, res) => {
-    res.json({message : 'api test'});
-})
 
 // @route POST user/register
 // @desc Register user
@@ -206,8 +196,11 @@ router.post('/login', (req, res) => {
 // @desc current user
 // @access Private
 router.get('/current', checkAuth, (req, res) => {
-    return res.json({
-        message : "jwt confirmed"
+    res.json({
+        id : req.user.id,
+        email: req.user.email,
+        name: req.user.name,
+        avatar: req.user.avatar
     })
 
 });
