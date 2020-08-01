@@ -44,7 +44,8 @@ router.post('/', checkAuth ,(req,res) => {
 
 });
 
-
-
+// 접속된 프로필 불러오기 (private)
+// 프로필 수정
+// 프로필 삭제
 
 module.exports = router;
