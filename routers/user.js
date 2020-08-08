@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 const passport = require('passport');
 const sgMail = require('@sendgrid/mail');
+const _ = require('lodash');
 
 const checkAuth = passport.authenticate('jwt', {session : false});
 sgMail.setApiKey(process.env.EMAIL_KEY);
@@ -210,6 +211,127 @@ router.get('/current', checkAuth, (req, res) => {
     })
 
 });
+
+
+// @route PUT user/forgotpassword
+// @desc forgot password / send email
+// @access Private
+
+router.put('/forgotpassword', (req,res) => {
+    const { email } = req.body;
+
+    userModel
+        .findOne({email})
+        .then(user => {
+            const payload = { _id: user._id };
+            const token = tokenGenerator(payload, '20m');
+
+            const emailData = {
+                from: process.env.EMAIL_FROM,
+                to: email,
+                subject: "Password Reset Link",
+                html: `
+                <h1>Please use the following link to reset your password</h1>
+                <p>http://localhost:3000/user/password/reset/${token}</p>
+                <hr />
+                <p>This email may contain sensetive information</p>
+                <p>http://localhost:3000</p>
+                `
+            }
+
+            return user
+                .updateOne({ resetPasswordLink: token})
+                .then(() => {
+                    sgMail
+                        .send(emailData)
+                        .then(() => {
+                            res.status(200).json({
+                                message: `Email has been sent to ${email}. Follow the instruction to activate your account`
+                            })
+                        })
+                        .catch(err => {
+                            return res.status(404).json({
+                                message: err.message
+                            })
+                        })
+                })
+                .catch(err => {
+                    res.status(400).json({
+                        error : 'Database connection error on user password forgot request'
+                    })
+
+                })
+
+        })
+        .catch(err => {
+            res.status(500).json({
+                error : err
+            })
+        })
+})
+
+// @route PUT user/resetpassword
+// @desc reset password
+// @access Private
+router.put('/resetpassword', (req,res) => {
+    const {resetPasswordLink, newPassword} = req.body;
+
+    console.log(resetPasswordLink);
+
+    if(resetPasswordLink){
+        jwt.verify(resetPasswordLink, process.env.SECRET_KEY, (err, decoded) => {
+            if (err) {
+                return res.status(400).json({
+                    error : 'Expired Link. Try again'
+                });
+            }else{
+                userModel
+                    .findOne({resetPasswordLink})
+                    .then(user => {
+                        const updateFields = {
+                            password: newPassword,
+                            resetPasswordLink: ''
+                        }
+                        console.log('before :', user)
+                        // user
+                        //     .findByIdAndUpdate(
+                        //         user._id,
+                        //         {$set: updateFields},
+                        //         {new: true}
+                        //     )
+                        //     .then(user => {
+                        //         res.status(200).json({
+                        //             message : 'Great! Now you can login with new password'
+                        //         })
+                        //     })
+
+                        user = _.extend(user, updateFields);
+                        console.log('after :',user);
+
+                        user
+                            .save()
+                            .then(user => {
+                                res.status(200).json({
+                                    message : 'Great! Now you can login with new password',
+                                    userInfo : user
+                                })
+                            })
+                            .catch(err =>{
+                                return res.status(408).json({
+                                    error: 'Error resetting user password'
+                                });
+                            })
+
+                    })
+                    .catch(err => {
+                        return res.status(404).json({
+                            error : 'Something went wrong. Try later'
+                        })
+                    })
+            }
+        })
+    }
+})
 
 
 module.exports = router;
