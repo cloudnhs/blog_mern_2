@@ -42,8 +42,8 @@ router.post('/register', (req, res) => {
                      subject: 'Account activation link',
                      html: `
                         <h1>Please use the following to activate your account</h1>
-                        <input type="submit" onclick="http://localhost:3000/user/activate/${token}" value="confirm">
-<!--                        <p>http://localhost:3000/user/activate/${token}</p>-->
+<!--                        <input type="button" onclick="window.open('http://localhost:3000/user/activate/${token}')" value="confirm">-->
+                        <p>http://localhost:3000/user/activate/${token}</p>
                         <hr />
                         <p>This email may contain sensetive information</p>
                         <p>http://localhost:3000</p> 
@@ -80,6 +80,43 @@ router.post('/register', (req, res) => {
 
 
 });
+
+// @route POST user/activation
+// @desc Activation account / confirm email
+// @access Private
+router.post('/activation', (req, res) => {
+    const { token } = req.body;
+
+    if(token) {
+        jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+            if(err){
+                return res.status(401).json({
+                    errors: 'Expired link. Signup again'
+                });
+            }else{
+                const {name, email, password} = jwt.decode(token)
+                const newUser = new userModel({
+                    name : name,
+                    email : email,
+                    password : password
+                })
+                newUser
+                    .save()
+                    .then(user => {
+                        res.status(200).json({
+                            success: true,
+                            userInfo: user
+                        })
+                    })
+                    .catch(err => {
+                        res.status(400).json({
+                            errors : err
+                        })
+                    })
+            }
+        })
+    }
+})
 
 
 
