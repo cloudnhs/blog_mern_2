@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/cloudnhs/blog_mern_2#readme",
   "dependencies": {
+    "@sendgrid/mail": "^7.2.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "check-auth": "0.0.1",

@@ -1,6 +1,35 @@
 import React, {Component} from 'react';
 
 class Login extends Component {
+
+    // 상태값 선언
+    constructor(){
+        super();
+        this.state = {
+            email: '',
+            password: '',
+            errors: {}
+        }
+        this.onChange = this.onChange.bind(this);
+        this.onSubmit = this.onSubmit.bind(this);
+
+    }
+    // 함수 선언
+    onChange(e){
+        this.setState({[e.target.name]:e.target.value});
+    }
+
+    onSubmit(e){
+        e.preventDefault();
+        const loginUser = {
+            email:this.state.email,
+            password:this.state.password
+        }
+        console.log(loginUser);
+    }
+
+
+
     render() {
         return (
             <div className={"login"}>
@@ -12,29 +41,36 @@ class Login extends Component {
                                Login your account
                             </p>
 
+                            <form onSubmit={this.onSubmit}>
+                                <div className={"form-group"}>
+                                    <input
+                                        type={"text"}
+                                        className={"form-control form-control-lg"}
+                                        placeholder={"Email Address"}
+                                        name="email"
+                                        value={this.state.email}
+                                        onChange={this.onChange}
+                                    />
+                                </div>
 
-                            <div className={"form-group"}>
+                                <div className={"form-group"}>
+                                    <input
+                                        type={"text"}
+                                        className={"form-control form-control-lg"}
+                                        placeholder={"Password"}
+                                        name={"password"}
+                                        value={this.state.password}
+                                        onChange={this.onChange}
+                                    />
+                                </div>
+
                                 <input
-                                    type={"text"}
-                                    className={"form-control form-control-lg"}
-                                    placeholder={"Email Address"}
+                                    type="submit"
+                                    className={"btn btn-info btn-block mt-4"}
                                 />
-                            </div>
-
-                            <div className={"form-group"}>
-                                <input
-                                    type={"text"}
-                                    className={"form-control form-control-lg"}
-                                    placeholder={"Password"}
-                                />
-                            </div>
-                            
-                            <input
-                                type="submit"
-                                className={"btn btn-info btn-block mt-4"}
-                            />
-
+                            </form>
                         </div>
+
                     </div>
                 </div>
             </div>

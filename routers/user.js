@@ -3,13 +3,16 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 const passport = require('passport');
-const checkAuth = passport.authenticate('jwt', {session : false});
+const sgMail = require('@sendgrid/mail');
 
-function tokenGenerator(payload) {
+const checkAuth = passport.authenticate('jwt', {session : false});
+sgMail.setApiKey(process.env.EMAIL_KEY);
+
+const tokenGenerator = (payload, time) => {
     return jwt.sign(
         payload,
         process.env.SECRET_KEY,
-        {expiresIn : 36000}
+        {expiresIn : time}
     );
 }
 
@@ -23,80 +26,46 @@ router.post('/register', (req, res) => {
     // email matching -> password 암호화 -> database 저장
     userModel
         .findOne({email})
-        
         .then(user => {
              if(user){
                  return res.json({
                      message : 'email exists'
                  })
+             }else{
+                 // send email
+                 const payload = {name, email, password}
+                 const token = tokenGenerator(payload, "10m")
+
+                 const emailData = {
+                     from: process.env.EMAIL_FROM,
+                     to: email,
+                     subject: 'Account activation link',
+                     html: `
+                        <h1>Please use the following to activate your account</h1>
+                        <input type="submit" onclick="http://localhost:3000/user/activate/${token}" value="confirm">
+<!--                        <p>http://localhost:3000/user/activate/${token}</p>-->
+                        <hr />
+                        <p>This email may contain sensetive information</p>
+                        <p>http://localhost:3000</p> 
+                     `
+                 }
+
+                 sgMail
+                     .send(emailData)
+                     .then(() => {
+                         res.status(200).json({
+                             message: `Email has been sent to ${email}`
+                         })
+                     })
+                     .catch(err => {
+                         res.status(400).json({
+                             success: false,
+                             error: err
+                         });
+                     });
+
+
              }
-            userModel
-                .findOne({name})
-                .then(user => {
-                    if(user){
-                        return res.json({
-                            message : 'name exists'
-                        })
-                    }
-
-                    const newUser = new userModel({
-                        name,
-                        email,
-                        password
-                    });
-
-                    newUser
-                        .save()
-                        .then(user => {
-                            res.json({
-                                message : "Successful newuser",
-                                userInfo : user
-                            });
-                        })
-                        .catch(err => console.log(err));
-
-                    // const avatar = gravatar.url(req.body.email, {
-                    //     s: '200',
-                    //     r: 'pg',
-                    //     d: 'mm'
-                    // });
-        
-                    // bcrypt.genSalt(10, (err, salt) =>{
-                    //     if(err) return err;
-                    //     console.log(salt);
-                    //     bcrypt.hash(req.body.password, salt, (err, hash) => {
-                    //         if(err) return err;
-                    //         const newUser = new userModel({
-                    //             name : req.body.name,
-                    //             email : req.body.email,
-                    //             password : hash,
-                    //             avatar : avatar
-                    //         });
-                        
-                    //         newUser
-                    //             .save()
-                    //             .then(user => {
-                    //                 res.json({
-                    //                     message : "saved user data",
-                    //                     userInfo : user
-                    //                 })
-                    //             })
-                    //             .catch(err => {
-                    //                 res.json({
-                    //                     message : err.message
-                    //                 });
-                    //             });
-                        
-                
-                    //     })
-                    // })
-                })
-                .catch(err => {
-                    res.json({
-                        message : err.message
-                    })
-                })
-            
 
         })
         .catch(err => {
@@ -148,7 +117,7 @@ router.post('/login', (req, res) => {
 
                     res.json({
                         message : "login successful",
-                        tokenInfo : 'bearer '+ tokenGenerator(payload)
+                        tokenInfo : 'bearer '+ tokenGenerator(payload, "7d")
                     })
                 })
                 // bcrypt
