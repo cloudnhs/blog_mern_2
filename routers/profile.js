@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const profileModel = require('../models/profile');
+const _ = require('lodash');
+
 const checkAuth = passport.authenticate('jwt',{session:false});
 
 // @route POST profile/
@@ -45,7 +47,154 @@ router.post('/', checkAuth ,(req,res) => {
 });
 
 // 접속된 프로필 불러오기 (private)
+// @route GET profile/
+// @desc get profile from current user route
+// @access Private
+router.get('/', checkAuth, (req,res)=> {
+    profileModel
+        .findOne({user: req.user.id})
+        .then(profile => {
+            if(!profile){
+                return res.status(200).json({
+                    message : 'profile is not registered. please register your profile'
+                })
+            }
+            res.status(200).json({
+                id: profile._id,
+                company: profile.company,
+                age: profile.age
+            });
+
+        })
+        .catch(err => res.status(400).json(err));
+})
+
 // 프로필 수정
+// @route PUT profile/
+// @desc update profile route
+// @access Private
+router.put('/', checkAuth, (req,res)=> {
+    // const updateFields = {
+    //     user: req.user.id,
+    //     introduce: req.body.introduce,
+    //     company: req.body.company,
+    //     website: req.body.website,
+    //     location: req.body.location,
+    //     status: req.body.status,
+    //     gender: req.body.gender,
+    //     age: req.body.age
+    // }
+
+    const updateFields = {};
+    updateFields.user = req.user.id;
+    if (req.body.introduce) updateFields.introduce = req.body.introduce;
+    if (req.body.company) updateFields.company = req.body.company;
+    if (req.body.website) updateFields.website = req.body.website;
+    if (req.body.location) updateFields.location = req.body.location;
+    if (req.body.status) updateFields.status = req.body.status;
+    if (req.body.gender) updateFields.gender = req.body.gender;
+    if (req.body.age) updateFields.age = req.body.age;
+
+    if(typeof req.body.skills !== 'undefined'){
+        updateFields.skills = req.body.skills.split(',');
+    }
+
+    profileModel
+        .findOne({user: req.user.id})
+        .then(profile => {
+            if(!profile){
+                return res.status(404).json({
+                    message : 'no profile register your profile first'
+                })
+            }else{
+                profileModel
+                    .findOneAndUpdate(
+                        { user: req.user.id },
+                        { $set: updateFields },
+                        { new: true }
+                    )
+                    .then(profile =>{
+                        return res.status(200).json(profile);
+                    })
+                    .catch(err => res.status(404).json(err));
+            }
+        })
+        .catch(err => res.status(500).json(err));
+
+
+
+    // const id = req.user.id;
+
+    // profileModel
+        // .findOne({user: id})
+        // .then(profile => {
+        //     console.log('profile')
+        //     if(!profile){
+        //         return res.status(404).json({
+        //             message : 'no profile register your profile first'
+        //         })
+        //     }
+            //
+            // const updateFields = {
+            //     user: id,
+            //     introduce: req.body.introduce,
+            //     company: req.body.company
+            //     // website: req.body.website,
+            //     // location: req.body.location,
+            //     // status: req.body.status,
+            //     // gender: req.body.gender,
+            //     // age: req.body.age
+            // }
+            // console.log('before :',profile);
+            // profile = _.extend(profile, updateFields)
+            // console.log('after :',profile);
+        //
+        //     profile
+        //         .save()
+        //         .then(profile => {
+        //             console.log('profile : ', profile)
+        //             res.status(200).json({
+        //                 message : 'your profile updated',
+        //                 profileInfo : profile
+        //             })
+        //         })
+        //         .catch(err =>{
+        //             return res.status(408).json({
+        //                 error: 'Error updating your profile'
+        //             });
+        //         })
+        //
+        // } )
+        // .catch(err => {
+        //     res.json({
+        //         message : err
+        //     })
+        // })
+})
+
+
 // 프로필 삭제
+
+// @route DELETE profile/
+// @desc delete profile route
+// @access Private
+router.delete('/', checkAuth, (req, res) => {
+    const  id = req.user.id
+      //console.log(id);
+
+
+    profileModel
+        .findOneAndDelete(id)
+        .then(() => {
+            res.json({
+                message : 'your profile deleted'
+            })
+        })
+        .catch(err => {
+            res.json({
+                message : err
+            })
+        })
+})
 
 module.exports = router;
