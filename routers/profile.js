@@ -59,11 +59,7 @@ router.get('/', checkAuth, (req,res)=> {
                     message : 'profile is not registered. please register your profile'
                 })
             }
-            res.status(200).json({
-                id: profile._id,
-                company: profile.company,
-                age: profile.age
-            });
+            res.status(200).json(profile);
 
         })
         .catch(err => res.status(400).json(err));
@@ -195,6 +191,73 @@ router.delete('/', checkAuth, (req, res) => {
                 message : err
             })
         })
+})
+
+
+// exp add
+
+// @route POST profile/experience
+// @desc add experience to profile route
+// @access Private
+
+router.post('/experience', checkAuth, (req, res) => {
+    profileModel
+        .findOne({user: req.user.id})
+        .then(profile => {
+
+            const newExp = {
+                title : req.body.title,
+                company : req.body.company,
+                location : req.body.location,
+                from : req.body.from,
+                to : req.body.to,
+                current : req.body.current,
+                description: req.body.description
+            }
+
+            profile.experience.unshift(newExp)
+            profile
+                .save()
+                .then(profile => {
+                    res.status(200).json(profile)
+                })
+                .catch(err => res.status(404).json(err));
+
+
+        })
+        .catch(err => res.status(400).json(err));
+})
+
+// edu add
+
+// @route POST profile/education
+// @desc add education to profile route
+// @access Private
+
+router.post('/education', checkAuth, (req,res) => {
+    profileModel
+        .findOne({user : req.user.id})
+        .then(profile => {
+            const newEdu = {
+                school : req.body.school,
+                degree : req.body.degree,
+                fieldofstudy : req.body.fieldofstudy,
+                from : req.body.from,
+                to : req.body.to,
+                current : req.body.current,
+                description: req.body.description
+            }
+            console.log('before:' + profile);
+            profile.education.unshift(newEdu);
+            console.log('after:' + profile);
+            profile
+                .save()
+                .then(profile => {
+                    res.status(200).json(profile)
+                })
+                .catch(err=> res.status(404).json(err))
+        })
+        .catch(err => res.status(400).json(err))
 })
 
 module.exports = router;
