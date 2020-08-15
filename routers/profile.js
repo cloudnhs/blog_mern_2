@@ -260,4 +260,30 @@ router.post('/education', checkAuth, (req,res) => {
         .catch(err => res.status(400).json(err))
 })
 
+// edu delete
+
+// @route delete profile/education
+// @desc put education to profile route
+// @access Private
+
+router.delete('/education/:edu_id', checkAuth, (req, res) => {
+    profileModel
+        .findOne({user : req.user.id})
+        .then(profile => {
+            const removeIndex = profile.education
+                .map(item => item.id)
+                .indexOf(req.params.edu_id)
+            console.log(removeIndex)
+            // profile.education.splice(removeIndex, 1)
+            //
+            // profile
+            //     .save()
+            //     .then(profile => res.status(200).json(profile))
+            //     .catch(err => res.status(404).json(err))
+
+        })
+        .catch(err => res.status(404).json(err))
+})
+
+
 module.exports = router;
