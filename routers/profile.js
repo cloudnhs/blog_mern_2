@@ -6,7 +6,7 @@ const _ = require('lodash');
 
 const checkAuth = passport.authenticate('jwt',{session:false});
 
-// @route POST profile/
+// @route POST /profile
 // @desc Register profile route
 // @access Private
 

@@ -10,6 +10,7 @@ dotEnv.config();
 
 const userRouter = require('./routers/user');
 const profileRouter = require('./routers/profile');
+const postRouter = require('./routers/post');
 
 
 // database setting
@@ -30,6 +31,7 @@ require('./config/passport')(passport);
 
 app.use('/user', userRouter);
 app.use('/profile', profileRouter);
+app.use('/post', postRouter);
 
 const PORT = process.env.PORT || 7070;
 
